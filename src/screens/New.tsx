@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity } from "react-native";
+import { ScrollView, View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { BackButton } from "../components/BackButton";
 import { Checkbox } from "../components/Checkbox";
 import { Feather } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
+import { api } from "../lib/axios";
+// import { AxiosError } from 'axios';
 
 const availableWeekDays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
 export function New() {
+  const [title, setTitle] = useState('');
   const [weekDays, setWeekDays] = useState<number[]>([]);
 
   function handleToggleWeekDay(weekDayIndex: number) {
@@ -15,6 +18,25 @@ export function New() {
       setWeekDays(prevState => prevState.filter(weekDay => weekDay !== weekDayIndex ));
     } else {
       setWeekDays(prevState => [...prevState, weekDayIndex]);
+    }
+  }
+
+  async function handleCreateNewHabit() {
+    try {
+      if (!title.trim() || weekDays.length === 0) {
+        Alert.alert('New Habit', 'Inform  the habit name and choose the day(s)')
+      }
+
+      await api.post('/habits', { title, weekDays });
+
+      setTitle('');
+      setWeekDays([]);  
+
+      Alert.alert('New habit', 'Habit successfully created')
+    } catch (error) {
+      // const er: AxiosError = error;
+      console.log(error);
+      Alert.alert('Error', 'Unable to create habit')
     }
   }
   return (
@@ -34,6 +56,8 @@ export function New() {
           className="h-12 pl-4 rounded-lg mt-3 bg-zinc-900 text-white border-2 border-zinc-800 focus:border-green-600"
           placeholder="Exercises, Drink Water ..."
           placeholderTextColor={colors.zinc[400]}
+          onChangeText={setTitle}
+          value={title}
         />
 
         <Text className="font-semibold mt-4 mb-3 text-white text-base">
@@ -54,6 +78,7 @@ export function New() {
         <TouchableOpacity
           activeOpacity={0.7}
           className="w-full h-14 flex-row items-center justify-center bg-green-600 rounded-md mt-6"
+          onPress={handleCreateNewHabit}
         >
           <Feather 
             name="check"
